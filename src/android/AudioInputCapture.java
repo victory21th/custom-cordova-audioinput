@@ -287,8 +287,8 @@ public class AudioInputCapture extends CordovaPlugin
 				if (activity.fileUrl != null) {
 				   try {
 				      info.put("file", msg.getData().getString("file"));
-				      activity.sendUpdate(info, false); // Release status callback in JS side
-				      activity.callbackContext = null;
+				      activity.sendUpdate(info, true); // Release status callback in JS side
+//                      activity.callbackContext = null;
 				   }
 				   catch (JSONException e) {
 				      Log.e(LOG_TAG, e.getMessage(), e);
