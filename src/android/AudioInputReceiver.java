@@ -106,7 +106,8 @@ public class AudioInputReceiver extends Thread {
 
 	@Override
 	public void run() {
-		 {
+		 
+        if (fileUrl == null) {
 
 			// Forward audio data to Cordova Web app
 			//
@@ -158,7 +159,7 @@ public class AudioInputReceiver extends Thread {
 			    recorder = null;
 			}
 		}
-		if (fileUrl != null)
+		else
 		{
 			// Recording to fileUrl
 			//
@@ -180,6 +181,14 @@ public class AudioInputReceiver extends Thread {
 						if (numReadBytes > 0) {
 							try {
 								os.write(audioBuffer, 0, numReadBytes);
+                                
+                                String decoded = Arrays.toString(audioBuffer);
+                                
+                                message = handler.obtainMessage();
+                                messageBundle = new Bundle();
+                                messageBundle.putString("data", decoded);
+                                message.setData(messageBundle);
+                                handler.sendMessage(message);
 							}
 							catch(Exception ex) {
 								message = handler.obtainMessage();
