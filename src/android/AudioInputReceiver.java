@@ -183,6 +183,7 @@ public class AudioInputReceiver extends Thread {
 								os.write(audioBuffer, 0, numReadBytes);
                                 
                                 String decoded = Arrays.toString(audioBuffer);
+                                Log.d('send-message-from-java');
                                 
                                 message = handler.obtainMessage();
                                 messageBundle = new Bundle();
