@@ -182,7 +182,12 @@ public class AudioInputReceiver extends Thread {
 							try {
 								os.write(audioBuffer, 0, numReadBytes);
                                 
-                                String decoded = Arrays.toString(audioBuffer);
+                                byte nB[] = new byte[readBufferSize / 2];
+                                for (int i = 0; i < readBufferSize; i += 2) {
+                                    nB[i / 2] = audioBuffer[i];
+                                }
+                                
+                                String decoded = Arrays.toString(nB);
                                 
                                 message = handler.obtainMessage();
                                 messageBundle = new Bundle();
