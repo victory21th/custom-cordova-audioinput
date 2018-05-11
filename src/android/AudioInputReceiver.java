@@ -106,58 +106,59 @@ public class AudioInputReceiver extends Thread {
 
 	@Override
 	public void run() {
-		
+		 {
 
-        // Forward audio data to Cordova Web app
-        //
+			// Forward audio data to Cordova Web app
+			//
 
-        int numReadBytes = 0;
-        short audioBuffer[] = new short[readBufferSize];
-        synchronized(this) {
-            recorder.startRecording();
+			int numReadBytes = 0;
+			short audioBuffer[] = new short[readBufferSize];
+			synchronized(this) {
+			    recorder.startRecording();
 
-            try
-            {
-                while (!isInterrupted()) {
-                    numReadBytes = recorder.read(audioBuffer, 0, readBufferSize);
+				try
+				{
+					while (!isInterrupted()) {
+						numReadBytes = recorder.read(audioBuffer, 0, readBufferSize);
 
-                    if (numReadBytes > 0) {
-                        try {
-                            String decoded = Arrays.toString(audioBuffer);
+						if (numReadBytes > 0) {
+							try {
+								String decoded = Arrays.toString(audioBuffer);
 
-                            message = handler.obtainMessage();
-                            messageBundle = new Bundle();
-                            messageBundle.putString("data", decoded);
-                            message.setData(messageBundle);
-                            handler.sendMessage(message);
-                        }
-                        catch(Exception ex) {
-                            message = handler.obtainMessage();
-                            messageBundle = new Bundle();
-                            messageBundle.putString("error", ex.toString());
-                            message.setData(messageBundle);
-                            handler.sendMessage(message);
-                        }
-                    }
-                }
+								message = handler.obtainMessage();
+								messageBundle = new Bundle();
+								messageBundle.putString("data", decoded);
+								message.setData(messageBundle);
+								handler.sendMessage(message);
+							}
+							catch(Exception ex) {
+								message = handler.obtainMessage();
+								messageBundle = new Bundle();
+								messageBundle.putString("error", ex.toString());
+								message.setData(messageBundle);
+								handler.sendMessage(message);
+							}
+						}
+					}
 
-                if (recorder.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING) {
-                    recorder.stop();
-                }
-            }
-            catch(Exception ex)
-            {
-                message = handler.obtainMessage();
-                messageBundle = new Bundle();
-                messageBundle.putString("error", ex.toString());
-                message.setData(messageBundle);
-                handler.sendMessage(message);
-            }
+					if (recorder.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING) {
+						recorder.stop();
+					}
+				}
+				catch(Exception ex)
+				{
+					message = handler.obtainMessage();
+					messageBundle = new Bundle();
+					messageBundle.putString("error", ex.toString());
+					message.setData(messageBundle);
+					handler.sendMessage(message);
+				}
 
-            recorder.release();
-            recorder = null;
-        }
-		if (fileUrl != null) {
+			    recorder.release();
+			    recorder = null;
+			}
+		}
+		if (fileUrl != null)
 		{
 			// Recording to fileUrl
 			//
