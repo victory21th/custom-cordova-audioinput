@@ -62,6 +62,7 @@ public class AudioInputReceiver extends Thread {
 	private int isStop = 0;
 	private int isResume = 0;
 	private FileOutputStream os;
+	private File audioFile;
 
 	public AudioInputReceiver() {
 		recorder = new AudioRecord(MediaRecorder.AudioSource.DEFAULT, sampleRateInHz, channelConfig, audioFormat, minBufferSize * RECORDING_BUFFER_FACTOR);
@@ -185,7 +186,7 @@ public class AudioInputReceiver extends Thread {
 				try
 				{
 				    if (isResume == 0) {
-				        File audioFile = File.createTempFile("AudioInputReceiver-", ".pcm");
+				        audioFile = File.createTempFile("AudioInputReceiver-", ".pcm");
                         os = new FileOutputStream(audioFile.getPath());
 				    }
 
