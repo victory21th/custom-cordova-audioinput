@@ -249,8 +249,10 @@ public class AudioInputReceiver extends Thread {
 					handler.sendMessage(message);
 				}
 
-				recorder.release();
-				recorder = null;
+                if (isInterrupted()) {
+                    recorder.release();
+                    recorder = null;
+                }
 			}
 		}
 	}
