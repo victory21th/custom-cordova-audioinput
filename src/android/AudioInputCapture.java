@@ -231,6 +231,40 @@ public class AudioInputCapture extends CordovaPlugin
 			}
 		}
 
+		if (action.equals("pause")) {
+		    if (receiver != null)
+            {
+                receiver.setIsStop(1);
+
+                return true;
+            }
+            else
+            { // Not recording, so can't pause
+                this.callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR,
+                INVALID_STATE_ERROR));
+
+                return false;
+            }
+		}
+
+		if (action.equals("resume")) {
+            if (receiver != null)
+            {
+                receiver.setIsStop(0);
+                receiver.setIsResume(1);
+                receiver.start();
+
+                return true;
+            }
+            else
+            { // Not recording, so can't pause
+                this.callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR,
+                INVALID_STATE_ERROR));
+
+                return false;
+            }
+        }
+
         return false;
     }
 

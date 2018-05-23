@@ -240,6 +240,27 @@ audioinput.stop = function (onStopped) {
 };
 
 /**
+ * Pause capturing audio
+ */
+audioinput.pause = function (onStopped) {
+    if (audioinput._capturing) {
+        exec(onStopped, audioinput._audioInputErrorEvent, "AudioInputCapture", "pause", []);
+        audioinput._capturing = false;
+    }
+};
+
+/**
+ * Resume capturing audio
+ */
+audioinput.resume = function (onStopped) {
+    if (!audioinput._capturing) {
+        exec(onStopped, audioinput._audioInputErrorEvent, "AudioInputCapture", "resume", []);
+        audioinput._capturing = true;
+    }
+};
+
+
+/**
  * Connect the audio node
  *
  * @param audioNode

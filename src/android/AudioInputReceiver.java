@@ -59,6 +59,9 @@ public class AudioInputReceiver extends Thread {
 	private Bundle messageBundle = new Bundle();
 	private URI fileUrl;
 
+	private int isStop = 0;
+	private int isResume = 0;
+
 	public AudioInputReceiver() {
 		recorder = new AudioRecord(MediaRecorder.AudioSource.DEFAULT, sampleRateInHz, channelConfig, audioFormat, minBufferSize * RECORDING_BUFFER_FACTOR);
 	}
@@ -99,6 +102,14 @@ public class AudioInputReceiver extends Thread {
 		recorder = new AudioRecord(audioSource, sampleRateInHz, channelConfig, audioFormat, recordingBufferSize);
 		this.fileUrl = fileUrl;
 	}
+
+	public void setIsStop(int stopValue) {
+	    this.isStop = stopValue;
+	}
+
+    public void setIsResume(int resumeValue) {
+        this.isResume = resumeValue;
+    }
 
 	public void setHandler(Handler handler) {
 		this.handler = handler;
@@ -172,10 +183,12 @@ public class AudioInputReceiver extends Thread {
 
 				try
 				{
-					File audioFile = File.createTempFile("AudioInputReceiver-", ".pcm");
-					FileOutputStream os = new FileOutputStream(audioFile.getPath());
+				    if (!isResume) {
+				        File audioFile = File.createTempFile("AudioInputReceiver-", ".pcm");
+                        FileOutputStream os = new FileOutputStream(audioFile.getPath());
+				    }
 
-					while (!isInterrupted()) {
+					while (!isInterrupted() && !isStop) {
 						numReadBytes = recorder.read(audioBuffer, 0, readBufferSize);
 
 						if (numReadBytes > 0) {
@@ -206,15 +219,20 @@ public class AudioInputReceiver extends Thread {
 					}
 
 					os.close();
-					File wav = new File(finalUrl);
-					addWavHeader(audioFile, wav);
-					audioFile.delete();
 
-					message = handler.obtainMessage();
-					messageBundle = new Bundle();
-					messageBundle.putString("file", wav.toURI().toString());
-					message.setData(messageBundle);
-					handler.sendMessage(message);
+					if (isInterrupted()) {
+                        File wav = new File(finalUrl);
+                        addWavHeader(audioFile, wav);
+                        audioFile.delete();
+
+                        message = handler.obtainMessage();
+                        messageBundle = new Bundle();
+                        messageBundle.putString("file", wav.toURI().toString());
+                        message.setData(messageBundle);
+                        handler.sendMessage(message);
+					}
+
+
 
 					if (recorder.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING) {
 						recorder.stop();
