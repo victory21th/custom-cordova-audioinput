@@ -60,7 +60,9 @@ public class AudioInputCapture extends CordovaPlugin
     private String format = null;
     private int audioSource = 0;
     private URI fileUrl = null;
-   
+    private String tempPath = null;
+    private byte audioBuffer[];
+
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
         if (action.equals("initialize")
@@ -132,7 +134,7 @@ public class AudioInputCapture extends CordovaPlugin
 
 			return true;
 		}
-	
+
 		if (action.equals("getMicrophonePermission")) {
 			if(PermissionHelper.hasPermission(this, permissions[RECORD_AUDIO])) {
 				PluginResult result = new PluginResult(PluginResult.Status.OK, Boolean.TRUE);
@@ -210,6 +212,7 @@ public class AudioInputCapture extends CordovaPlugin
 		if (action.equals("stop")) {
 			if (receiver != null)
 			{
+				receiver.setIsStop(0);
 				receiver.interrupt();
 
 				// Only do this if we're not saving to a file,
@@ -234,7 +237,9 @@ public class AudioInputCapture extends CordovaPlugin
 		if (action.equals("pause")) {
 		    if (receiver != null)
             {
-                receiver.setIsStop(1);
+            	tempPath = receiver.getFilePath();
+            	receiver.setIsStop(1);
+            	receiver.interrupt();
 
                 return true;
             }
@@ -250,9 +255,13 @@ public class AudioInputCapture extends CordovaPlugin
 		if (action.equals("resume")) {
             if (receiver != null)
             {
-                receiver.setIsStop(0);
-                receiver.setIsResume(1);
-                receiver.start();
+				audioBuffer = receiver.getAudioData();
+				receiver = new AudioInputReceiver(this.sampleRate, this.bufferSize, this.channels, this.format, this.audioSource, this.fileUrl);
+				receiver.setHandler(handler);
+				receiver.setTempPath(tempPath);
+				receiver.setAudioData(audioBuffer);
+				receiver.setIsResume(1);
+				receiver.start();
 
                 return true;
             }
@@ -317,7 +326,7 @@ public class AudioInputCapture extends CordovaPlugin
                 catch (JSONException e) {
                     Log.e(LOG_TAG, e.getMessage(), e);
                 }
-                
+
                 activity.sendUpdate(info, true);
 
 //                if (activity.fileUrl != null) {
@@ -366,7 +375,7 @@ public class AudioInputCapture extends CordovaPlugin
      */
     public void onRequestPermissionResult(int requestCode, String[] permissions,
                                               int[] grantResults) throws JSONException {
-       
+
         for(int r:grantResults) {
 			if(r == PackageManager.PERMISSION_DENIED) {
 				if (this.getPermissionCallbackContext == null) {

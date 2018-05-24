@@ -63,6 +63,8 @@ public class AudioInputReceiver extends Thread {
 	private int isResume = 0;
 	private FileOutputStream os;
 	private File audioFile;
+	private String tempPath = null;
+	private byte currentAudioData[];
 
 	public AudioInputReceiver() {
 		recorder = new AudioRecord(MediaRecorder.AudioSource.DEFAULT, sampleRateInHz, channelConfig, audioFormat, minBufferSize * RECORDING_BUFFER_FACTOR);
@@ -117,9 +119,25 @@ public class AudioInputReceiver extends Thread {
 		this.handler = handler;
 	}
 
+	public String getFilePath() {
+		return audioFile.getPath();
+	}
+
+	public void setTempPath(String tempPath) {
+		this.tempPath = tempPath;
+	}
+
+	public byte[] getAudioData() {
+		return currentAudioData;
+	}
+
+	public void setAudioData(byte audioData[]) {
+		this.currentAudioData = audioData;
+	}
+
 	@Override
 	public void run() {
-		 
+
         if (fileUrl == null) {
 
 			// Forward audio data to Cordova Web app
@@ -188,22 +206,28 @@ public class AudioInputReceiver extends Thread {
 				    if (isResume == 0) {
 				        audioFile = File.createTempFile("AudioInputReceiver-", ".pcm");
                         os = new FileOutputStream(audioFile.getPath());
-				    }
+				    } else {
+				    	audioFile = new File(tempPath);
+				    	os = new FileOutputStream(audioFile);
 
-					while (!isInterrupted() && isStop == 0) {
+						os.write(currentAudioData);
+
+					}
+
+					while (!isInterrupted()) {
 						numReadBytes = recorder.read(audioBuffer, 0, readBufferSize);
 
 						if (numReadBytes > 0) {
 							try {
 								os.write(audioBuffer, 0, numReadBytes);
-                                
+
                                 byte nB[] = new byte[readBufferSize / 2];
                                 for (int i = 0; i < readBufferSize; i += 2) {
                                     nB[i / 2] = audioBuffer[i];
                                 }
-                                
+
                                 String decoded = Arrays.toString(nB);
-                                
+
                                 message = handler.obtainMessage();
                                 messageBundle = new Bundle();
                                 messageBundle.putString("data", decoded);
@@ -220,20 +244,27 @@ public class AudioInputReceiver extends Thread {
 						}
 					}
 
+
 					os.close();
 
-					if (isInterrupted()) {
-                        File wav = new File(finalUrl);
-                        addWavHeader(audioFile, wav);
+					File rrfile = new File(audioFile.getPath());
+					FileInputStream fis = new FileInputStream(rrfile);
+					byte[] data = new byte[(int) rrfile.length()];
+					fis.read(data);
+					currentAudioData = data;
+					fis.close();
+
+                    File wav = new File(finalUrl);
+                    addWavHeader(audioFile, wav);
+
+                    message = handler.obtainMessage();
+                    messageBundle = new Bundle();
+                    messageBundle.putString("file", wav.toURI().toString());
+                    message.setData(messageBundle);
+                    handler.sendMessage(message);
+				    if (isStop == 0) {
                         audioFile.delete();
-
-                        message = handler.obtainMessage();
-                        messageBundle = new Bundle();
-                        messageBundle.putString("file", wav.toURI().toString());
-                        message.setData(messageBundle);
-                        handler.sendMessage(message);
 					}
-
 
 
 					if (recorder.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING) {
@@ -249,10 +280,9 @@ public class AudioInputReceiver extends Thread {
 					handler.sendMessage(message);
 				}
 
-                if (isInterrupted()) {
-                    recorder.release();
-                    recorder = null;
-                }
+				recorder.release();
+				recorder = null;
+
 			}
 		}
 	}
